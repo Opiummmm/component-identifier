@@ -1,0 +1,39 @@
+{
+  "sceneType": "pcb",
+  "components": [
+    {
+      "id": "c1",
+      "identifiedAs": "ATmega328P-PU 8-bit Microcontroller",
+      "category": "ic",
+      "confidence": 0.95,
+      "boundingBox": { "x": 0.35, "y": 0.4, "width": 0.25, "height": 0.15 },
+      "markings": ["ATMEGA328P-PU", "Atmel logo"],
+      "specifications": {
+        "architecture": "AVR 8-bit RISC",
+        "flash": "32 KB",
+        "clockMax": "20 MHz"
+      },
+      "packageType": "DIP-28",
+      "commonUses": ["Arduino Uno main MCU"],
+      "typicalCircuits": ["Arduino Uno minimal system"],
+      "alternatives": ["ATmega328PB"],
+      "datasheetSearchQuery": "ATmega328P datasheet Microchip"
+    },
+    {
+      "id": "c2",
+      "identifiedAs": "16 MHz Quartz Crystal",
+      "category": "crystal",
+      "confidence": 0.88,
+      "boundingBox": { "x": 0.62, "y": 0.45, "width": 0.06, "height": 0.04 },
+      "markings": ["16.000"],
+      "specifications": { "frequency": "16 MHz" },
+      "packageType": "HC-49S",
+      "commonUses": ["Microcontroller clock source"],
+      "typicalCircuits": ["MCU XTAL1/XTAL2 with 22pF load caps"],
+      "alternatives": ["Any 16MHz HC-49 crystal"],
+      "datasheetSearchQuery": "16MHz HC-49S crystal datasheet"
+    }
+  ],
+  "overallConfidence": 0.86,
+  "sceneNotes": "Appears to be an Arduino Uno R3 or compatible clone."
+}

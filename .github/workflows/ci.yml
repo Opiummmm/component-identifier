@@ -12,21 +12,18 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint · Typecheck · Test
+    name: Lint · Typecheck · Unit
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install
         run: npm ci
 
       - name: Format check
@@ -38,12 +35,60 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
+      - name: Unit tests
         run: npm test
 
       - name: Build
         run: npm run build
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || 'dummy-for-build' }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy' }}
+          ANTHROPIC_API_KEY: dummy
+          GOOGLE_API_KEY: dummy
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+          SUPABASE_SERVICE_ROLE_KEY: dummy
+
+  e2e:
+    name: Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: quality
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+        env:
+          ANTHROPIC_API_KEY: dummy
+          GOOGLE_API_KEY: dummy
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+          SUPABASE_SERVICE_ROLE_KEY: dummy
+
+      - name: Start server + run E2E
+        run: |
+          npm run start &
+          npx wait-on http://localhost:3000
+          npm run test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

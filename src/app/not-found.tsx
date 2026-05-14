@@ -1,0 +1,19 @@
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+export default function NotFound() {
+  return (
+    <div className="bg-background flex min-h-screen flex-col items-center justify-center p-6">
+      <p className="text-primary font-mono text-sm">404</p>
+      <h1 className="mt-2 text-balance text-3xl font-bold tracking-tight">
+        Page not found
+      </h1>
+      <p className="text-muted-foreground mt-2 text-balance">
+        The page you're looking for doesn't exist.
+      </p>
+      <Button asChild className="mt-6">
+        <Link href="/">Back home</Link>
+      </Button>
+    </div>
+  );
+}
