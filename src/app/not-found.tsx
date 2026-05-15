@@ -9,7 +9,7 @@ export default function NotFound() {
         Page not found
       </h1>
       <p className="text-muted-foreground mt-2 text-balance">
-        The page you're looking for doesn't exist.
+      The page you&apos;re looking for doesn&apos;t exist.
       </p>
       <Button asChild className="mt-6">
         <Link href="/">Back home</Link>

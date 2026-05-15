@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     return jsonError('Image file is empty', 400, requestId);
   }
   if (file.size > MAX_FILE_SIZE) {
-    return jsonError('Image exceeds 5MB limit', 413, requestId);
+    return jsonError('Image exceeds 115mb limit', 413, requestId);
   }
   if (!ALLOWED_TYPES.includes(file.type as ImageMediaType)) {
     return jsonError(`Unsupported media type: ${file.type}`, 400, requestId);
@@ -105,10 +105,19 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: { 'X-Request-Id': requestId } },
     );
   } catch (err) {
-    console.error(`[${requestId}] identification failed:`, err);
-    if (err instanceof IdentificationError) {
-      return jsonError('Identification failed', 502, requestId);
+  console.error(`[${requestId}] identification failed:`, err);
+  if (err instanceof IdentificationError) {
+    // Check if it's an overload
+    const msg = String(err.cause);
+    if (/503|UNAVAILABLE|high demand|overloaded/i.test(msg)) {
+      return jsonError(
+        'The AI service is temporarily overloaded. Please try again in a minute.',
+        503,
+        requestId,
+      );
     }
-    return jsonError('Internal server error', 500, requestId);
+    return jsonError('Identification failed', 502, requestId);
   }
+  return jsonError('Internal server error', 500, requestId);
+}
 }

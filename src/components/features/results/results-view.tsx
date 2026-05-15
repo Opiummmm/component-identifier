@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ScanResult } from '@/lib/ai/schemas';
 import { AnnotatedScene } from './annotated-scene';
+import { ExportPdfButton } from './export-pdf';
 import { ComponentList } from './component-list';
 import { ComponentDetail } from './component-detail';
 import { ExportBomButton } from './export-bom';
@@ -66,6 +67,7 @@ export function ResultsView({ imageUrl, result }: Props) {
             <h3 className="font-semibold">Components</h3>
             <div className="flex gap-1">
               <ExportBomButton result={result} />
+              <ExportPdfButton result={result} imageUrl={imageUrl} />
               <Button
                 variant="outline"
                 size="sm"
@@ -92,7 +94,7 @@ export function ResultsView({ imageUrl, result }: Props) {
         open={selected !== undefined}
         onOpenChange={(open) => !open && setSelectedId(null)}
       >
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-xl md:max-w-2xl">
           <SheetHeader className="sr-only">
             <SheetTitle>Component detail</SheetTitle>
           </SheetHeader>

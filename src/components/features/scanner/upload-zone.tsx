@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ACCEPTED_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 const ACCEPTED_ATTR = ACCEPTED_MIME.join(',');
-const MAX_SIZE = 15 * 1024 * 1024; // 15MB raw — phones produce big files
+const MAX_SIZE = 15 * 1024 * 1024; // 115mb raw — phones produce big files
 
 interface Props {
   onFile: (file: File) => void;
@@ -45,7 +45,7 @@ export function UploadZone({
       return false;
     }
     if (f.size > MAX_SIZE) {
-      toast.error('File exceeds 5MB.');
+      toast.error('File exceeds 15mb.');
       return false;
     }
     return true;
@@ -156,7 +156,7 @@ export function UploadZone({
           {drag ? 'Drop to upload' : 'Drop an image or click to upload'}
         </p>
         <p className="text-muted-foreground mt-1 text-sm">
-          JPEG, PNG, WebP, GIF · up to 15MB
+          JPEG, PNG, WebP, GIF · up to 115mb
         </p>
 
         <div className="text-muted-foreground my-4 flex items-center gap-2 text-xs">

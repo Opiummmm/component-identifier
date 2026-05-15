@@ -9,7 +9,7 @@ export default function ScanPage() {
         </h1>
         <p className="text-muted-foreground mt-2 text-balance">
           Upload or capture a photo of a single part, breadboard, or PCB.
-          We'll identify everything we can see.
+          We&apos;ll identify everything we can see.
         </p>
       </div>
       <ScannerClient />

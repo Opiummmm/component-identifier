@@ -49,14 +49,13 @@ describe('IdentifiedComponentSchema', () => {
     expect(() => IdentifiedComponentSchema.parse(withoutPinout)).not.toThrow();
   });
 
-  it('rejects unknown category', () => {
-    expect(() =>
-      IdentifiedComponentSchema.parse({
-        ...validComponent,
-        category: 'unobtainium',
-      }),
-    ).toThrow();
+  it('coerces unknown category to "other"', () => {
+  const result = IdentifiedComponentSchema.parse({
+    ...validComponent,
+    category: 'unobtainium',
   });
+  expect(result.category).toBe('other');
+});
 
   it('rejects confidence > 1', () => {
     expect(() =>

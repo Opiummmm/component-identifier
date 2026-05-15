@@ -6,7 +6,16 @@ const genAI = new GoogleGenAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
-const MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
+// Comma-separated fallback chain. The client walks the list left-to-right,
+// only falling through to the next model if the previous one exhausts retries.
+const MODEL_CHAIN = (
+  process.env.GEMINI_MODEL ??
+  'gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash'
+)
+  .split(',')
+  .map((m) => m.trim())
+  .filter(Boolean);
+
 const MAX_OUTPUT_TOKENS = 32_768;
 const MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 1000;
@@ -73,6 +82,7 @@ function extractJson(text: string): unknown {
 async function callOnce(
   imageBase64: string,
   imageMediaType: ImageMediaType,
+  model: string,
 ): Promise<ScanResult> {
   const parts: Part[] = [
     {
@@ -87,7 +97,7 @@ async function callOnce(
   ];
 
   const response = await genAI.models.generateContent({
-    model: MODEL,
+    model,
     contents: [{ role: 'user', parts }],
     config: {
       systemInstruction: SYSTEM_PROMPT,
@@ -119,27 +129,58 @@ export async function identifyComponents(
 ): Promise<ScanResult> {
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      return await callOnce(imageBase64, imageMediaType);
-    } catch (err) {
-      lastError = err;
+  for (let modelIndex = 0; modelIndex < MODEL_CHAIN.length; modelIndex++) {
+    const model = MODEL_CHAIN[modelIndex]!;
+    const isLastModel = modelIndex === MODEL_CHAIN.length - 1;
 
-      // Truncation is not retryable — the response is consistently too long
-      if (err instanceof ResponseTruncatedError) {
-        throw new IdentificationError(err.message, err);
-      }
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (modelIndex > 0 && attempt === 1) {
+          console.warn(`[identifyComponents] falling back to ${model}`);
+        }
+        return await callOnce(imageBase64, imageMediaType, model);
+      } catch (err) {
+        lastError = err;
 
-      if (attempt < MAX_RETRIES) {
-        const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt - 1);
-        const reason = isTransientError(err) ? 'transient' : 'parse/validation';
-        console.warn(
-          `[identifyComponents] attempt ${attempt}/${MAX_RETRIES} failed (${reason}), retrying in ${backoff}ms`,
-        );
-        await sleep(backoff);
+        // Truncation is not retryable on the same model. Try the next one —
+        // sometimes a different model produces shorter (still valid) output.
+        if (err instanceof ResponseTruncatedError) {
+          console.warn(
+            `[identifyComponents] ${model} truncated, advancing to next model`,
+          );
+          break;
+        }
+
+        const transient = isTransientError(err);
+        const reason = transient ? 'transient' : 'parse/validation';
+
+        // Non-transient errors: parse failure or schema mismatch. The same
+        // model will almost certainly produce the same shape, so move on.
+        if (!transient) {
+          console.warn(
+            `[identifyComponents] ${model} attempt ${attempt}/${MAX_RETRIES} failed (${reason}), advancing to next model`,
+          );
+          break;
+        }
+
+        // Transient: back off and retry the same model
+        if (attempt < MAX_RETRIES) {
+          const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt - 1);
+          console.warn(
+            `[identifyComponents] ${model} attempt ${attempt}/${MAX_RETRIES} failed (${reason}), retrying in ${backoff}ms`,
+          );
+          await sleep(backoff);
+        } else if (!isLastModel) {
+          console.warn(
+            `[identifyComponents] ${model} exhausted retries, falling back to next model`,
+          );
+        }
       }
     }
   }
 
-  throw new IdentificationError('Failed after retries', lastError);
+  throw new IdentificationError(
+    'All models failed after retries',
+    lastError,
+  );
 }
