@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     return jsonError('Image file is empty', 400, requestId);
   }
   if (file.size > MAX_FILE_SIZE) {
-    return jsonError('Image exceeds 115mb limit', 413, requestId);
+    return jsonError('Image exceeds 15mb limit', 413, requestId);
   }
   if (!ALLOWED_TYPES.includes(file.type as ImageMediaType)) {
     return jsonError(`Unsupported media type: ${file.type}`, 400, requestId);

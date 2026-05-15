@@ -66,7 +66,7 @@ export default function LandingPage() {
               n={1}
               icon={Camera}
               title="Capture"
-              body="Drag, drop, or use your phone camera. JPEG, PNG, or WebP up to 115mb."
+              body="Drag, drop, or use your phone camera. JPEG, PNG, or WebP up to 15mb."
             />
             <Step
               n={2}
